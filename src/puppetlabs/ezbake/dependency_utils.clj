@@ -17,8 +17,9 @@
 ;; it automatically adds these dependencies to the dependency list, and these
 ;; are not at all relevant to our task at hand.
 (def exclude-dependencies #{'org.clojure/tools.nrepl
+                            'org.nrepl/nrepl
+                            'nrepl/nrepl
                             'clojure-complete/clojure-complete})
-
 (defn include-dep?
   [dep]
   (let [artifact-id (first dep)]

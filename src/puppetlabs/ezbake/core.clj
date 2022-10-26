@@ -871,11 +871,28 @@ Additional uberjar dependencies:
   [_ lein-project build-target]
   (generate-build-metadata-files lein-project))
 
+(defn remove-unsafe-first-dep
+  [list]
+  (filter #(not (contains? deputils/exclude-dependencies (get % 0))) list))
+
+(defn remove-unsafe-items
+  [list]
+  (filter #(not (contains? deputils/exclude-dependencies %)) list))
+(defn maybe-filter-excluded-libs
+  [project]
+  (if-not (System/getenv "EZBAKE_PRESERVE_UNSAFE_INCLUSIONS")
+    (-> project
+        (update :managed-dependencies remove-unsafe-first-dep)
+        (update :dependencies remove-unsafe-first-dep)
+        (update :aot remove-unsafe-items))
+    project))
+
 (defmethod action "stage"
   ;; note that the `lein-project` arg gets shadowed a few lines down to add full
   ;; snapshot versions of dependencies
   [_ lein-project build-target]
-  (let [deployed-version (if (and (deputils/snapshot-version? (:version lein-project))
+  (let [lein-project (maybe-filter-excluded-libs lein-project)
+        deployed-version (if (and (deputils/snapshot-version? (:version lein-project))
                                   (not (System/getenv "EZBAKE_NODEPLOY")))
                            (deploy-snapshot lein-project)
                            (:version lein-project))
